@@ -157,8 +157,11 @@ export default async function MyPage({
       </div>
 
       {insightHistory.length > 0 && (
-        <div className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">인사이트 모아보기</h2>
+        <details className="group mb-10">
+          <summary className="mb-4 flex cursor-pointer list-none items-center gap-2 text-lg font-bold">
+            인사이트 모아보기
+            <span className="text-sm text-foreground/40 transition group-open:rotate-180">▾</span>
+          </summary>
           <div className="space-y-3">
             {insightHistory.map((item) => (
               <div
@@ -175,7 +178,7 @@ export default async function MyPage({
               </div>
             ))}
           </div>
-        </div>
+        </details>
       )}
 
       <div className="mb-10 rounded-2xl border border-card-border bg-card p-4 shadow-sm">
