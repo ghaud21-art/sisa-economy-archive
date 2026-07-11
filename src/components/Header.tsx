@@ -31,14 +31,14 @@ export default async function Header() {
           <Link href="/archive" className="hover:text-accent">
             아카이브
           </Link>
-          <Link href="/trends" className="hover:text-accent">
-            트렌드
-          </Link>
-          <Link href="/leaderboard" className="hover:text-accent">
-            랭킹
-          </Link>
           {user ? (
             <>
+              <Link href="/trends" className="hover:text-accent">
+                트렌드
+              </Link>
+              <Link href="/leaderboard" className="hover:text-accent">
+                랭킹
+              </Link>
               <Link href="/mypage" className="hover:text-accent">
                 마이페이지
               </Link>
