@@ -116,3 +116,33 @@ export async function getOrCreatePersonalInsight(
 
   return insightText;
 }
+
+export interface PersonalInsightHistoryItem {
+  date: string;
+  interest: string;
+  insight_text: string;
+}
+
+export async function getPersonalInsightHistory(
+  userId: string,
+  limit = 30
+): Promise<PersonalInsightHistoryItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("user_insights")
+    .select("date, interest, insight_text")
+    .eq("user_id", userId)
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("getPersonalInsightHistory error:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((d) => ({
+    date: d.date,
+    interest: d.interest,
+    insight_text: stripMarkdown(d.insight_text),
+  }));
+}

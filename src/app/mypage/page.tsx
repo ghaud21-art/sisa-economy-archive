@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreatePersonalInsight } from "@/lib/data";
+import { getOrCreatePersonalInsight, getPersonalInsightHistory } from "@/lib/data";
 import { computeStreak, formatDateKo, getMonthInfo, todayKst } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
 import QuizCalendar from "@/components/QuizCalendar";
@@ -28,6 +28,12 @@ export default async function MyPage({
   const personalInsight = profile?.interest
     ? await getOrCreatePersonalInsight(user.id, profile.interest)
     : null;
+
+  // 오늘 새로 생성/캐시된 인사이트가 있으면 모아보기 목록 맨 위와 중복되니 나머지만 보여준다
+  const insightHistoryRaw = await getPersonalInsightHistory(user.id, 30);
+  const todayDate = insightHistoryRaw[0]?.date;
+  const insightHistory =
+    personalInsight && todayDate ? insightHistoryRaw.slice(1) : insightHistoryRaw;
 
   const monthInfo = getMonthInfo(month);
 
@@ -141,6 +147,28 @@ export default async function MyPage({
           </div>
         )}
       </div>
+
+      {insightHistory.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 text-lg font-bold">인사이트 모아보기</h2>
+          <div className="space-y-3">
+            {insightHistory.map((item) => (
+              <div
+                key={item.date}
+                className="rounded-2xl border border-card-border bg-card p-4 shadow-sm"
+              >
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-foreground/50">{formatDateKo(item.date)}</span>
+                  <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+                    {item.interest}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/80">{item.insight_text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-10 rounded-2xl border border-card-border bg-card p-4 shadow-sm">
         <QuizCalendar monthInfo={monthInfo} ratesByDate={ratesByDate} />
