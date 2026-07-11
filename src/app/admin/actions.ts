@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateYoutubeInsight } from "@/lib/gemini";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -22,7 +21,9 @@ async function requireAdmin() {
   return supabase;
 }
 
-export async function createYoutubeInsightAction(youtubeUrl: string) {
+// 실제 영상 분석은 GitHub Actions 배치(scripts/process-youtube-insights.ts)가 처리한다.
+// 여기서는 대기열에 등록만 하고 바로 반환해서 Vercel의 요청 타임아웃(최대 60초)을 피한다.
+export async function requestYoutubeInsightAction(youtubeUrl: string) {
   const supabase = await requireAdmin();
 
   const trimmed = youtubeUrl.trim();
@@ -30,24 +31,32 @@ export async function createYoutubeInsightAction(youtubeUrl: string) {
     throw new Error("유튜브 링크 형식이 아니에요.");
   }
 
-  const draft = await generateYoutubeInsight(trimmed);
-
-  const { error } = await supabase.from("youtube_insights").insert({
+  const { error } = await supabase.from("youtube_insight_requests").insert({
     youtube_url: trimmed,
-    video_title: draft.video_title,
-    headline: draft.headline,
-    keywords: draft.keywords,
-    summary: draft.summary,
-    key_arguments: draft.key_arguments,
-    economic_meaning: draft.economic_meaning,
-    insight: draft.insight,
-    concepts: draft.concepts,
   });
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin");
-  revalidatePath("/insights");
+}
+
+export async function retryYoutubeInsightRequestAction(id: string) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase
+    .from("youtube_insight_requests")
+    .update({ status: "pending", error_message: null, processed_at: null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
+}
+
+export async function deleteYoutubeInsightRequestAction(id: string) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("youtube_insight_requests").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
 }
 
 export async function deleteYoutubeInsightAction(id: string) {

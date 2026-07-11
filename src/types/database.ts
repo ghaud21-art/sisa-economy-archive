@@ -121,6 +121,17 @@ export type YoutubeInsight = {
   created_at: string;
 };
 
+export type YoutubeInsightRequestStatus = "pending" | "success" | "failed";
+
+export type YoutubeInsightRequest = {
+  id: string;
+  youtube_url: string;
+  status: YoutubeInsightRequestStatus;
+  error_message: string | null;
+  created_at: string;
+  processed_at: string | null;
+};
+
 type NoRelationships = { Relationships: [] };
 
 export interface Database {
@@ -191,6 +202,17 @@ export interface Database {
           published_at?: string;
         };
         Update: Partial<YoutubeInsight>;
+      } & NoRelationships;
+      youtube_insight_requests: {
+        Row: YoutubeInsightRequest;
+        Insert: Omit<YoutubeInsightRequest, "id" | "created_at" | "status" | "error_message" | "processed_at"> & {
+          id?: string;
+          created_at?: string;
+          status?: YoutubeInsightRequestStatus;
+          error_message?: string | null;
+          processed_at?: string | null;
+        };
+        Update: Partial<YoutubeInsightRequest>;
       } & NoRelationships;
     };
     Views: Record<string, never>;

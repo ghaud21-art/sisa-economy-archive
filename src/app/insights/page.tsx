@@ -18,9 +18,7 @@ export default async function InsightsPage() {
   return (
     <div>
       <h1 className="mb-2 text-2xl font-extrabold">📺 지식 인사이트</h1>
-      <p className="mb-8 text-sm text-foreground/60">
-        유튜브 영상을 AI가 분석해 정리한 시사·경제·AI 학습 콘텐츠예요.
-      </p>
+      <p className="mb-8 text-sm text-foreground/60">새로운 지식 인사이트를 확인해보세요.</p>
 
       {insights.length === 0 ? (
         <p className="text-sm text-foreground/60">아직 등록된 인사이트가 없어요.</p>

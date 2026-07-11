@@ -5,9 +5,6 @@ import { formatDateKo } from "@/lib/dates";
 import YoutubeInsightManager from "@/components/YoutubeInsightManager";
 import ArticleManager from "@/components/ArticleManager";
 
-// 유튜브 영상 분석(Gemini)이 길게 걸릴 수 있어 Vercel Hobby 한도까지 늘려둔다.
-export const maxDuration = 60;
-
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   success: { label: "성공", className: "bg-info-soft text-info" },
   failed: { label: "실패", className: "bg-accent text-accent-foreground" },
@@ -37,21 +34,31 @@ export default async function AdminPage() {
 
   const admin = createAdminClient();
 
-  const [{ data: runs }, { count: userCount }, { data: latestArticle }, { data: youtubeInsights }] =
-    await Promise.all([
-      admin.from("batch_runs").select("*").order("started_at", { ascending: false }).limit(20),
-      admin.from("profiles").select("id", { count: "exact", head: true }),
-      admin
-        .from("articles")
-        .select("published_date")
-        .order("published_date", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      admin
-        .from("youtube_insights")
-        .select("id, video_title, headline, published_at")
-        .order("published_at", { ascending: false }),
-    ]);
+  const [
+    { data: runs },
+    { count: userCount },
+    { data: latestArticle },
+    { data: youtubeInsights },
+    { data: youtubeRequests },
+  ] = await Promise.all([
+    admin.from("batch_runs").select("*").order("started_at", { ascending: false }).limit(20),
+    admin.from("profiles").select("id", { count: "exact", head: true }),
+    admin
+      .from("articles")
+      .select("published_date")
+      .order("published_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from("youtube_insights")
+      .select("id, video_title, headline, published_at")
+      .order("published_at", { ascending: false }),
+    admin
+      .from("youtube_insight_requests")
+      .select("id, youtube_url, status, error_message, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
   const latestDate = latestArticle?.published_date ?? null;
 
@@ -110,7 +117,7 @@ export default async function AdminPage() {
 
       <h2 className="mb-4 text-lg font-bold">지식 인사이트 (유튜브)</h2>
       <div className="mb-10">
-        <YoutubeInsightManager items={youtubeInsights ?? []} />
+        <YoutubeInsightManager items={youtubeInsights ?? []} requests={youtubeRequests ?? []} />
       </div>
 
       <h2 className="mb-4 text-lg font-bold">배치 실행 이력</h2>

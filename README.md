@@ -6,14 +6,14 @@
 - DB/인증: Supabase (Postgres + Auth)
 - 뉴스 수집: RSS + 네이버 뉴스검색 API
 - AI 분석/퀴즈 생성: Gemini API
-- 자동 실행: GitHub Actions 매일 크론 (`.github/workflows/daily-digest.yml`)
+- 자동 실행: GitHub Actions 매일 크론 (`.github/workflows/daily-digest.yml`) + 유튜브 지식 인사이트 30분 주기 처리 (`.github/workflows/process-youtube-insights.yml`)
 
 ## 처음 설정하기
 
 ### 1. Supabase 프로젝트 생성
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 만듭니다 (무료 플랜, 카드 등록 불필요).
-2. 프로젝트의 **SQL Editor**에서 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`0002_personalization.sql`](supabase/migrations/0002_personalization.sql), [`0003_advanced_features.sql`](supabase/migrations/0003_advanced_features.sql)을 순서대로 실행해 테이블/RLS를 만듭니다.
+2. 프로젝트의 **SQL Editor**에서 `supabase/migrations/` 폴더의 SQL 파일을 번호 순서대로(0001 → 0006) 실행해 테이블/RLS를 만듭니다.
 3. **Project Settings → API**에서 아래 3개 값을 확인합니다.
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -59,6 +59,8 @@ npm run generate-digest  # 배치 스크립트 수동 1회 실행 (뉴스 수집
 | `NAVER_CLIENT_SECRET` | 네이버 검색 API Client Secret |
 
 등록 후 **Actions** 탭에서 "Daily News Digest" 워크플로를 `Run workflow`로 수동 실행해 정상 동작을 확인할 수 있습니다.
+
+관리자 페이지에서 유튜브 지식 인사이트를 등록하면 "Process YouTube Insight Requests" 워크플로가 30분마다 대기열을 확인해 처리합니다 (같은 시크릿을 사용하며 네이버 키는 필요 없습니다). 바로 처리하고 싶으면 이 워크플로도 **Actions** 탭에서 수동 실행하면 됩니다.
 
 ## Vercel 배포
 
