@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { stripMarkdown } from "@/lib/text";
+import BookmarkButton from "@/components/BookmarkButton";
 import type { Article } from "@/types/database";
 
 const CATEGORY_STYLE: Record<Article["category"], { label: string; className: string }> = {
@@ -7,18 +8,36 @@ const CATEGORY_STYLE: Record<Article["category"], { label: string; className: st
   ai: { label: "AI", className: "bg-violet-soft text-violet" },
 };
 
-export default function ArticleCard({ article }: { article: Article }) {
+export default function ArticleCard({
+  article,
+  userId,
+  isBookmarked = false,
+}: {
+  article: Article;
+  userId?: string;
+  isBookmarked?: boolean;
+}) {
   const category = CATEGORY_STYLE[article.category];
   return (
     <Link
       href={`/article/${article.id}`}
       className="block rounded-2xl border border-card-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="mb-2 flex items-center gap-2 text-xs">
-        <span className={`rounded-full px-2.5 py-0.5 font-semibold ${category.className}`}>
-          {category.label}
-        </span>
-        <span className="text-foreground/50">{article.source}</span>
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className={`rounded-full px-2.5 py-0.5 font-semibold ${category.className}`}>
+            {category.label}
+          </span>
+          <span className="text-foreground/50">{article.source}</span>
+        </div>
+        {userId && (
+          <BookmarkButton
+            articleId={article.id}
+            userId={userId}
+            initialBookmarked={isBookmarked}
+            size="sm"
+          />
+        )}
       </div>
       <h3 className="mb-2 text-base font-semibold leading-snug">
         {article.headline ?? article.title}

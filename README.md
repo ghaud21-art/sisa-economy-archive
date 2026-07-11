@@ -13,7 +13,7 @@
 ### 1. Supabase 프로젝트 생성
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 만듭니다 (무료 플랜, 카드 등록 불필요).
-2. 프로젝트의 **SQL Editor**에서 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`0002_personalization.sql`](supabase/migrations/0002_personalization.sql)을 순서대로 실행해 테이블/RLS를 만듭니다.
+2. 프로젝트의 **SQL Editor**에서 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`0002_personalization.sql`](supabase/migrations/0002_personalization.sql), [`0003_advanced_features.sql`](supabase/migrations/0003_advanced_features.sql)을 순서대로 실행해 테이블/RLS를 만듭니다.
 3. **Project Settings → API**에서 아래 3개 값을 확인합니다.
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -67,8 +67,13 @@ npm run generate-digest  # 배치 스크립트 수동 1회 실행 (뉴스 수집
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `GEMINI_API_KEY` (마이페이지의 관심분야 맞춤 인사이트를 웹앱이 직접 생성할 때 사용됩니다. 배치 전용이 아니라 웹앱에서도 필요합니다.)
-   - 네이버 키·`SUPABASE_SERVICE_ROLE_KEY`는 Vercel에 넣지 않습니다 (GitHub Actions 배치 전용).
+   - `SUPABASE_SERVICE_ROLE_KEY` (관리자 페이지가 전체 배치 이력·가입자 수를 조회할 때 사용됩니다. 서버 전용 코드에서만 쓰이며 클라이언트에 노출되지 않습니다.)
+   - 네이버 키는 Vercel에 넣지 않습니다 (GitHub Actions 배치 전용).
 3. Deploy를 누르면 끝입니다.
+
+## 관리자 계정 지정
+
+`/admin` 페이지는 `profiles.is_admin`이 `true`인 사용자만 볼 수 있습니다. 기본값은 `false`라서, 관리자로 지정할 사용자의 `profiles.is_admin`을 Supabase 대시보드의 **Table Editor**에서 직접 `true`로 바꿔주세요.
 
 ## 프로젝트 구조
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticlesByDate, getDailyDigest } from "@/lib/data";
+import { getArticlesByDate, getBookmarkedArticleIds, getDailyDigest } from "@/lib/data";
+import { createClient } from "@/lib/supabase/server";
 import { formatDateKo } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
 import CategoryTabs from "@/components/CategoryTabs";
@@ -26,7 +27,15 @@ export default async function ArchiveDayPage({
   const digest = await getDailyDigest(date);
   if (!digest) notFound();
 
-  const articles = await getArticlesByDate(date, validCategory);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [articles, bookmarkedIds] = await Promise.all([
+    getArticlesByDate(date, validCategory),
+    user ? getBookmarkedArticleIds(user.id) : Promise.resolve(new Set<string>()),
+  ]);
 
   return (
     <div>
@@ -55,7 +64,12 @@ export default async function ArchiveDayPage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {articles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+            <ArticleCard
+              key={article.id}
+              article={article}
+              userId={user?.id}
+              isBookmarked={bookmarkedIds.has(article.id)}
+            />
           ))}
         </div>
       )}

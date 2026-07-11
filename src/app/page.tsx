@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { getArticlesByDate, getDailyDigest, getLatestPublishedDate } from "@/lib/data";
+import {
+  getArticlesByDate,
+  getBookmarkedArticleIds,
+  getDailyDigest,
+  getLatestPublishedDate,
+} from "@/lib/data";
+import { createClient } from "@/lib/supabase/server";
 import { todayKst, formatDateKo } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
 import CategoryTabs from "@/components/CategoryTabs";
@@ -19,9 +25,15 @@ export default async function HomePage({
   const latestDate = await getLatestPublishedDate();
   const date = latestDate ?? today;
 
-  const [articles, digest] = await Promise.all([
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [articles, digest, bookmarkedIds] = await Promise.all([
     getArticlesByDate(date, validCategory),
     getDailyDigest(date),
+    user ? getBookmarkedArticleIds(user.id) : Promise.resolve(new Set<string>()),
   ]);
 
   return (
@@ -56,7 +68,12 @@ export default async function HomePage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {articles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+            <ArticleCard
+              key={article.id}
+              article={article}
+              userId={user?.id}
+              isBookmarked={bookmarkedIds.has(article.id)}
+            />
           ))}
         </div>
       )}

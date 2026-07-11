@@ -3,6 +3,7 @@ import { getArticleById } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateKo } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
+import BookmarkButton from "@/components/BookmarkButton";
 
 const CATEGORY_STYLE = {
   economy_affairs: { label: "시사·경제", className: "bg-info-soft text-info" },
@@ -22,22 +23,37 @@ export default async function ArticleDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let isBookmarked = false;
   if (user) {
     await supabase
       .from("article_reads")
       .upsert({ user_id: user.id, article_id: article.id }, { onConflict: "user_id,article_id" });
+
+    const { data: bookmark } = await supabase
+      .from("bookmarks")
+      .select("article_id")
+      .eq("user_id", user.id)
+      .eq("article_id", article.id)
+      .maybeSingle();
+    isBookmarked = bookmark !== null;
   }
 
   const category = CATEGORY_STYLE[article.category];
 
   return (
     <article>
-      <div className="mb-4 flex items-center gap-2 text-xs">
-        <span className={`rounded-full px-2.5 py-0.5 font-semibold ${category.className}`}>
-          {category.label}
-        </span>
-        <span className="text-foreground/50">{article.source}</span>
-        <span className="text-foreground/50">· {formatDateKo(article.published_date)}</span>
+      <div className="mb-4 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className={`rounded-full px-2.5 py-0.5 font-semibold ${category.className}`}>
+            {category.label}
+          </span>
+          <span className="text-foreground/50">{article.source}</span>
+          <span className="text-foreground/50">· {formatDateKo(article.published_date)}</span>
+        </div>
+        {user && (
+          <BookmarkButton articleId={article.id} userId={user.id} initialBookmarked={isBookmarked} />
+        )}
       </div>
 
       <h1 className={`text-2xl font-extrabold leading-tight ${article.headline ? "mb-1" : "mb-4"}`}>

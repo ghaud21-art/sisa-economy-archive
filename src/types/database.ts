@@ -54,6 +54,7 @@ export type QuizAnswer = {
   question_id: string;
   user_answer: boolean;
   is_correct: boolean;
+  resolved_at: string | null;
 };
 
 export type ArticleRead = {
@@ -66,6 +67,8 @@ export type Profile = {
   id: string;
   nickname: string | null;
   interest: string | null;
+  share_rank: boolean;
+  is_admin: boolean;
   created_at: string;
 };
 
@@ -75,6 +78,31 @@ export type UserInsight = {
   interest: string;
   insight_text: string;
   created_at: string;
+};
+
+export type Bookmark = {
+  user_id: string;
+  article_id: string;
+  created_at: string;
+};
+
+export type BatchRunStatus = "running" | "success" | "failed";
+
+export type BatchRun = {
+  id: string;
+  date: string;
+  status: BatchRunStatus;
+  articles_count: number | null;
+  quiz_count: number | null;
+  error_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
+
+export type LeaderboardRow = {
+  nickname: string;
+  avg_correct_rate: number;
+  attempt_count: number;
 };
 
 type NoRelationships = { Relationships: [] };
@@ -109,7 +137,7 @@ export interface Database {
       } & NoRelationships;
       quiz_answers: {
         Row: QuizAnswer;
-        Insert: Omit<QuizAnswer, "id"> & { id?: string };
+        Insert: Omit<QuizAnswer, "id" | "resolved_at"> & { id?: string; resolved_at?: string | null };
         Update: Partial<QuizAnswer>;
       } & NoRelationships;
       article_reads: {
@@ -122,8 +150,30 @@ export interface Database {
         Insert: Omit<UserInsight, "created_at"> & { created_at?: string };
         Update: Partial<UserInsight>;
       } & NoRelationships;
+      bookmarks: {
+        Row: Bookmark;
+        Insert: Omit<Bookmark, "created_at"> & { created_at?: string };
+        Update: Partial<Bookmark>;
+      } & NoRelationships;
+      batch_runs: {
+        Row: BatchRun;
+        Insert: Omit<BatchRun, "id" | "started_at" | "articles_count" | "quiz_count" | "error_message" | "finished_at"> & {
+          id?: string;
+          started_at?: string;
+          articles_count?: number | null;
+          quiz_count?: number | null;
+          error_message?: string | null;
+          finished_at?: string | null;
+        };
+        Update: Partial<BatchRun>;
+      } & NoRelationships;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_weekly_leaderboard: {
+        Args: Record<string, never>;
+        Returns: LeaderboardRow[];
+      };
+    };
   };
 }

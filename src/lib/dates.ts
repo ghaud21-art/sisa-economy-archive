@@ -11,7 +11,7 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function addDaysUtc(dateStr: string, days: number): string {
+export function addDaysUtc(dateStr: string, days: number): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() + days);

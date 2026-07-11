@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreatePersonalInsight, getPersonalInsightHistory } from "@/lib/data";
+import { getBookmarkedArticles, getOrCreatePersonalInsight, getPersonalInsightHistory } from "@/lib/data";
 import { computeStreak, formatDateKo, getMonthInfo, todayKst } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
 import QuizCalendar from "@/components/QuizCalendar";
 import InterestEditor from "@/components/InterestEditor";
+import ArticleCard from "@/components/ArticleCard";
+import ShareRankToggle from "@/components/ShareRankToggle";
 
 export default async function MyPage({
   searchParams,
@@ -21,13 +23,15 @@ export default async function MyPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("interest")
+    .select("interest, share_rank")
     .eq("id", user.id)
     .maybeSingle();
 
   const personalInsight = profile?.interest
     ? await getOrCreatePersonalInsight(user.id, profile.interest)
     : null;
+
+  const bookmarkedArticles = await getBookmarkedArticles(user.id);
 
   // 오늘 새로 생성/캐시된 인사이트가 있으면 모아보기 목록 맨 위와 중복되니 나머지만 보여준다
   const insightHistoryRaw = await getPersonalInsightHistory(user.id, 30);
@@ -80,7 +84,8 @@ export default async function MyPage({
       .from("quiz_answers")
       .select("attempt_id, question_id")
       .in("attempt_id", attemptIds)
-      .eq("is_correct", false);
+      .eq("is_correct", false)
+      .is("resolved_at", null);
 
     if (wrongAnswers && wrongAnswers.length > 0) {
       const questionIds = [...new Set(wrongAnswers.map((w) => w.question_id))];
@@ -109,7 +114,10 @@ export default async function MyPage({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold">마이페이지</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-extrabold">마이페이지</h1>
+        <ShareRankToggle userId={user.id} initialShared={profile?.share_rank ?? false} />
+      </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard label="연속 학습" value={`${streak}일`} tone="amber" />
@@ -174,7 +182,28 @@ export default async function MyPage({
         <QuizCalendar monthInfo={monthInfo} ratesByDate={ratesByDate} />
       </div>
 
-      <h2 className="mb-4 text-lg font-bold">오답노트</h2>
+      {bookmarkedArticles.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 text-lg font-bold">북마크한 기사</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {bookmarkedArticles.map((article) => (
+              <ArticleCard key={article.id} article={article} userId={user.id} isBookmarked />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-bold">오답노트</h2>
+        {wrongItems.length > 0 && (
+          <Link
+            href="/mypage/review"
+            className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm hover:opacity-90"
+          >
+            오답만 다시 풀기 →
+          </Link>
+        )}
+      </div>
       {wrongItems.length === 0 ? (
         <p className="text-sm text-foreground/60">최근 틀린 문제가 없어요.</p>
       ) : (
