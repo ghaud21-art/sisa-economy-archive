@@ -30,20 +30,18 @@ export default async function ArchiveDayPage({
   return (
     <div>
       <div className="mb-6">
-        <Link href="/archive" className="text-sm text-black/60 hover:underline dark:text-white/60">
+        <Link href="/archive" className="text-sm text-foreground/60 hover:text-accent">
           ← 아카이브 목록
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">{formatDateKo(date)}</h1>
+        <h1 className="mt-2 text-2xl font-extrabold">{formatDateKo(date)}</h1>
       </div>
 
-      <div className="mb-8 rounded-xl border border-black/10 bg-black/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03]">
-        <h2 className="mb-2 text-sm font-semibold text-black/60 dark:text-white/60">
-          이 날의 종합 다이제스트
-        </h2>
+      <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 shadow-sm">
+        <h2 className="mb-2 text-sm font-semibold text-accent">이 날의 종합 다이제스트</h2>
         <p className="text-sm leading-relaxed">{digest.overview_text}</p>
         <Link
           href={`/quiz/${date}`}
-          className="mt-3 inline-block rounded-full bg-foreground px-4 py-1.5 text-sm text-background hover:opacity-90"
+          className="mt-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground shadow-sm hover:opacity-90"
         >
           이 날의 O/X 퀴즈 풀기 →
         </Link>
@@ -52,7 +50,7 @@ export default async function ArchiveDayPage({
       <CategoryTabs basePath={`/archive/${date}`} active={validCategory ?? "all"} />
 
       {articles.length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">해당 카테고리의 기사가 없어요.</p>
+        <p className="text-sm text-foreground/60">해당 카테고리의 기사가 없어요.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {articles.map((article) => (

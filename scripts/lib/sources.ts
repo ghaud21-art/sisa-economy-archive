@@ -29,6 +29,6 @@ export const NAVER_QUERIES: { query: string; category: ArticleCategory }[] = [
 ];
 
 export const MAX_ARTICLES_PER_CATEGORY: Record<ArticleCategory, number> = {
-  economy_affairs: 8,
-  ai: 6,
+  economy_affairs: 6,
+  ai: 4,
 };

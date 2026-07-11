@@ -69,7 +69,13 @@ function byRecency(a: CandidateArticle, b: CandidateArticle): number {
   return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
 }
 
-export function selectTopArticles(articles: CandidateArticle[]): CandidateArticle[] {
+// Gemini에게 중복 판단을 맡기기 전, 프롬프트 크기를 제한하기 위한 카테고리별 후보 상한
+const REVIEW_CAP_PER_CATEGORY = 25;
+
+// 소스별 상한을 적용하고 카테고리별로 후보군을 나눈다 (최종 선별은 gemini.selectDistinctArticles가 담당)
+export function groupCandidatesByCategory(
+  articles: CandidateArticle[]
+): Record<ArticleCategory, CandidateArticle[]> {
   const bySource = new Map<string, CandidateArticle[]>();
   for (const article of articles) {
     const list = bySource.get(article.source) ?? [];
@@ -83,17 +89,18 @@ export function selectTopArticles(articles: CandidateArticle[]): CandidateArticl
     capped.push(...[...list].sort(byRecency).slice(0, MAX_CANDIDATES_PER_SOURCE));
   }
 
-  const byCategory = new Map<ArticleCategory, CandidateArticle[]>();
+  const byCategory = { economy_affairs: [], ai: [] } as Record<ArticleCategory, CandidateArticle[]>;
   for (const article of capped) {
-    const list = byCategory.get(article.category) ?? [];
-    list.push(article);
-    byCategory.set(article.category, list);
+    byCategory[article.category].push(article);
   }
 
-  const selected: CandidateArticle[] = [];
-  for (const [category, list] of byCategory.entries()) {
-    const sorted = [...list].sort(byRecency);
-    selected.push(...sorted.slice(0, MAX_ARTICLES_PER_CATEGORY[category]));
+  for (const category of Object.keys(byCategory) as ArticleCategory[]) {
+    byCategory[category] = byCategory[category]
+      .sort(byRecency)
+      .slice(0, REVIEW_CAP_PER_CATEGORY);
   }
-  return selected;
+
+  return byCategory;
 }
+
+export { MAX_ARTICLES_PER_CATEGORY };

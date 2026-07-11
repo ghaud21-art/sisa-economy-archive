@@ -14,7 +14,7 @@ export default function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} className="hover:underline">
+    <button onClick={handleLogout} className="hover:text-accent">
       로그아웃
     </button>
   );

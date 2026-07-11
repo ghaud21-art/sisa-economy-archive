@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { generatePersonalInsight } from "@/lib/gemini";
 import type { Article, ArticleCategory } from "@/types/database";
 
 export async function getLatestPublishedDate(): Promise<string | null> {
@@ -75,4 +76,40 @@ export async function listArchiveDates(limit = 60): Promise<ArchiveDay[]> {
     overview_text: d.overview_text,
     article_count: d.article_ids?.length ?? 0,
   }));
+}
+
+// 관심분야 맞춤 인사이트: 오늘(최신 발행일) 기준 하루 1회 생성 후 캐시
+export async function getOrCreatePersonalInsight(
+  userId: string,
+  interest: string
+): Promise<string | null> {
+  const date = await getLatestPublishedDate();
+  if (!date) return null;
+
+  const supabase = await createClient();
+  const { data: cached } = await supabase
+    .from("user_insights")
+    .select("insight_text")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .maybeSingle();
+  if (cached) return cached.insight_text;
+
+  const digest = await getDailyDigest(date);
+  if (!digest) return null;
+  const articles = await getArticlesByDate(date);
+  if (articles.length === 0) return null;
+
+  const insightText = await generatePersonalInsight(
+    interest,
+    digest.overview_text,
+    articles.map((a) => ({ title: a.headline ?? a.title, summary: a.summary }))
+  );
+  if (!insightText) return null;
+
+  await supabase
+    .from("user_insights")
+    .insert({ user_id: userId, date, interest, insight_text: insightText });
+
+  return insightText;
 }

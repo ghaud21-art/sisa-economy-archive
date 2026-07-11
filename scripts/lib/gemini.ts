@@ -13,6 +13,7 @@ function getClient(): GoogleGenAI {
 }
 
 export interface ArticleAnalysis {
+  headline: string;
   keywords: string[];
   summary: string;
   insight: string;
@@ -23,6 +24,10 @@ export interface ArticleAnalysis {
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
+    headline: {
+      type: Type.STRING,
+      description: "기사 원제목 대신 보여줄, 핵심을 담은 한 문장 헤드라인 (25자 내외, 클릭베이트 표현 제거)",
+    },
     keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "핵심 키워드 5개" },
     summary: { type: Type.STRING, description: "3~5문장 종합 요약" },
     insight: { type: Type.STRING, description: "이 뉴스를 실생활/업무에 어떻게 적용할 수 있는지에 대한 인사이트" },
@@ -40,7 +45,7 @@ const ANALYSIS_SCHEMA = {
       },
     },
   },
-  required: ["keywords", "summary", "insight", "prediction", "concepts"],
+  required: ["headline", "keywords", "summary", "insight", "prediction", "concepts"],
 };
 
 export async function analyzeArticle(article: CandidateArticle): Promise<ArticleAnalysis | null> {
@@ -54,6 +59,7 @@ export async function analyzeArticle(article: CandidateArticle): Promise<Article
 본문 요약/스니펫: ${article.snippet}
 
 이 기사를 한국어로 분석해서 아래 JSON 스키마에 맞춰 작성해줘.
+- headline: 원제목의 낚시성 표현이나 언론사 특유의 말투를 걷어내고, 핵심 사실만 담은 한 문장 헤드라인 (25자 내외)
 - keywords: 핵심 키워드 5개 (명사 위주, 짧게)
 - summary: 기사 내용을 3~5문장으로 종합 요약
 - insight: 이 뉴스를 실생활이나 업무에 어떻게 적용할 수 있을지 구체적인 인사이트
@@ -73,6 +79,58 @@ export async function analyzeArticle(article: CandidateArticle): Promise<Article
   } catch (err) {
     console.error(`[gemini] 기사 분석 실패 (${article.title}):`, (err as Error).message);
     return null;
+  }
+}
+
+const DISTINCT_SELECTION_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    selectedIndices: {
+      type: Type.ARRAY,
+      items: { type: Type.INTEGER },
+      description: "선택된 기사들의 0-based 인덱스 목록",
+    },
+  },
+  required: ["selectedIndices"],
+};
+
+// 같은 실제 사건을 다룬 기사가 여러 소스에서 중복 수집됐을 때, 서로 다른 사건만 남기고 대표 1건씩만 선택
+export async function selectDistinctArticles(
+  candidates: { title: string; snippet: string; source: string }[],
+  maxCount: number
+): Promise<number[]> {
+  if (candidates.length <= maxCount) {
+    return candidates.map((_, i) => i);
+  }
+
+  const listInput = candidates
+    .map((c, i) => `[${i}] (${c.source}) ${c.title}\n${c.snippet.slice(0, 150)}`)
+    .join("\n\n");
+
+  try {
+    const response = await getClient().models.generateContent({
+      model: MODEL,
+      contents: `아래는 후보 뉴스 기사 목록(인덱스, 출처, 제목, 스니펫)이다:\n\n${listInput}\n\n이 중에서 서로 다른 실제 사건/이슈를 다루는 기사를 최대 ${maxCount}개 골라줘.
+- 같은 사건(예: 같은 인물의 같은 순방, 같은 기업의 같은 발표)을 다룬 기사가 여러 개 있으면 그 중 정보가 가장 풍부하고 구체적인 것 1개만 남기고 나머지는 제외해.
+- 운세/부고/게시판 같은 단신성 콘텐츠보다는 실질적인 시사·경제·AI 뉴스 가치가 있는 기사를 우선해.
+- 남은 자리 안에서 최대한 다양한 주제를 다루도록 선택해.
+- selectedIndices에 최종 선택된 기사의 인덱스만 담아줘.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: DISTINCT_SELECTION_SCHEMA,
+      },
+    });
+
+    const text = response.text;
+    if (!text) return candidates.map((_, i) => i).slice(0, maxCount);
+    const parsed = JSON.parse(text) as { selectedIndices: number[] };
+    const indices = (parsed.selectedIndices ?? []).filter(
+      (i) => Number.isInteger(i) && i >= 0 && i < candidates.length
+    );
+    return indices.length > 0 ? indices.slice(0, maxCount) : candidates.map((_, i) => i).slice(0, maxCount);
+  } catch (err) {
+    console.error("[gemini] 기사 중복 선별 실패, 최신순으로 대체:", (err as Error).message);
+    return candidates.map((_, i) => i).slice(0, maxCount);
   }
 }
 

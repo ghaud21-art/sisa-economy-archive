@@ -4,11 +4,11 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 import { fetchAllRssArticles } from "./lib/rss";
 import { fetchAllNaverArticles } from "./lib/naver";
-import { dedupeArticles, selectTopArticles } from "./lib/select";
-import { analyzeArticle, generateDailyOverview, generateQuiz } from "./lib/gemini";
+import { dedupeArticles, groupCandidatesByCategory, MAX_ARTICLES_PER_CATEGORY } from "./lib/select";
+import { analyzeArticle, generateDailyOverview, generateQuiz, selectDistinctArticles } from "./lib/gemini";
 import { getSupabaseAdmin } from "./lib/supabase-admin";
 import type { CandidateArticle } from "./lib/types";
-import type { Article } from "@/types/database";
+import type { Article, ArticleCategory } from "@/types/database";
 
 function todayKst(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
@@ -25,7 +25,17 @@ async function main() {
   console.log(`[digest] RSS ${rssArticles.length}건, 네이버 ${naverArticles.length}건 수집`);
 
   const deduped = dedupeArticles([...rssArticles, ...naverArticles]);
-  const selected = selectTopArticles(deduped);
+  const byCategory = groupCandidatesByCategory(deduped);
+
+  const selected: CandidateArticle[] = [];
+  for (const category of Object.keys(byCategory) as ArticleCategory[]) {
+    const candidates = byCategory[category];
+    const indices = await selectDistinctArticles(
+      candidates.map((c) => ({ title: c.title, snippet: c.snippet, source: c.source })),
+      MAX_ARTICLES_PER_CATEGORY[category]
+    );
+    selected.push(...indices.map((i) => candidates[i]));
+  }
   console.log(`[digest] 중복제거 후 ${deduped.length}건, 선별 ${selected.length}건`);
 
   if (selected.length === 0) {
@@ -41,6 +51,7 @@ async function main() {
     analyzedArticles.push({
       ...candidate,
       title: candidate.title,
+      headline: analysis.headline,
       source: candidate.source,
       source_url: candidate.link,
       category: candidate.category,
@@ -60,6 +71,9 @@ async function main() {
 
   const supabase = getSupabaseAdmin();
 
+  // 같은 날짜에 배치를 다시 돌려도 기사가 계속 누적되지 않도록, 그날 기사를 먼저 비운다.
+  await supabase.from("articles").delete().eq("published_date", date);
+
   const { data: insertedArticles, error: articlesError } = await supabase
     .from("articles")
     .upsert(
@@ -67,6 +81,7 @@ async function main() {
         published_date: date,
         category: a.category,
         title: a.title,
+        headline: a.headline,
         source: a.source,
         source_url: a.source_url,
         keywords: a.keywords,
@@ -88,7 +103,7 @@ async function main() {
   const savedArticles = insertedArticles ?? [];
 
   const overview = await generateDailyOverview(
-    savedArticles.map((a) => a.title),
+    savedArticles.map((a) => a.headline ?? a.title),
     savedArticles.map((a) => a.summary)
   );
 
@@ -104,7 +119,7 @@ async function main() {
   }
 
   const quizDrafts = await generateQuiz(
-    savedArticles.map((a) => ({ title: a.title, summary: a.summary }))
+    savedArticles.map((a) => ({ title: a.headline ?? a.title, summary: a.summary }))
   );
   console.log(`[digest] 퀴즈 문항 ${quizDrafts.length}개 생성`);
 

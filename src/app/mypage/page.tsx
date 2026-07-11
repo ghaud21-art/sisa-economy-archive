@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getOrCreatePersonalInsight } from "@/lib/data";
 import { computeStreak, formatDateKo, getMonthInfo, todayKst } from "@/lib/dates";
 import QuizCalendar from "@/components/QuizCalendar";
 
@@ -15,6 +16,16 @@ export default async function MyPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?redirectTo=/mypage");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("interest")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const personalInsight = profile?.interest
+    ? await getOrCreatePersonalInsight(user.id, profile.interest)
+    : null;
 
   const monthInfo = getMonthInfo(month);
 
@@ -90,32 +101,51 @@ export default async function MyPage({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">마이페이지</h1>
+      <h1 className="mb-6 text-2xl font-extrabold">마이페이지</h1>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <StatCard label="연속 학습" value={`${streak}일`} />
-        <StatCard label={`${monthInfo.month}월 평균 정답률`} value={monthAvg !== null ? `${monthAvg}%` : "-"} />
-        <StatCard label={`${monthInfo.month}월 응시 횟수`} value={`${monthAttempts.length}회`} />
+        <StatCard label="연속 학습" value={`${streak}일`} tone="amber" />
+        <StatCard
+          label={`${monthInfo.month}월 평균 정답률`}
+          value={monthAvg !== null ? `${monthAvg}%` : "-"}
+          tone="accent"
+        />
+        <StatCard label={`${monthInfo.month}월 응시 횟수`} value={`${monthAttempts.length}회`} tone="violet" />
       </div>
 
-      <div className="mb-10 rounded-xl border border-black/10 p-4 dark:border-white/10">
+      {profile?.interest && (
+        <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 shadow-sm">
+          <h2 className="mb-2 text-sm font-semibold text-accent">
+            &ldquo;{profile.interest}&rdquo; 관점의 오늘 인사이트
+          </h2>
+          {personalInsight ? (
+            <p className="text-sm leading-relaxed">{personalInsight}</p>
+          ) : (
+            <p className="text-sm text-foreground/60">
+              아직 발행된 오늘의 뉴스가 없어서 맞춤 인사이트를 준비하지 못했어요.
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="mb-10 rounded-2xl border border-card-border bg-card p-4 shadow-sm">
         <QuizCalendar monthInfo={monthInfo} ratesByDate={ratesByDate} />
       </div>
 
       <h2 className="mb-4 text-lg font-bold">오답노트</h2>
       {wrongItems.length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">최근 틀린 문제가 없어요.</p>
+        <p className="text-sm text-foreground/60">최근 틀린 문제가 없어요.</p>
       ) : (
         <div className="space-y-3">
           {wrongItems.map((item, i) => (
-            <div key={i} className="rounded-xl border border-black/10 p-4 dark:border-white/10">
-              <p className="mb-1 text-xs text-black/50 dark:text-white/50">{formatDateKo(item.date)}</p>
+            <div key={i} className="rounded-2xl border border-card-border bg-card p-4 shadow-sm">
+              <p className="mb-1 text-xs text-foreground/50">{formatDateKo(item.date)}</p>
               <p className="mb-2 text-sm font-medium leading-relaxed">{item.question_text}</p>
-              <p className="text-sm text-black/70 dark:text-white/70">{item.explanation}</p>
+              <p className="text-sm text-foreground/70">{item.explanation}</p>
               {item.related_article_id && (
                 <Link
                   href={`/article/${item.related_article_id}`}
-                  className="mt-2 inline-block text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  className="mt-2 inline-block text-xs font-medium text-accent hover:underline"
                 >
                   관련 기사 다시 보기 →
                 </Link>
@@ -128,11 +158,25 @@ export default async function MyPage({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+const STAT_CARD_TONE = {
+  amber: "border-amber/30 bg-amber-soft text-amber-foreground",
+  accent: "border-accent/30 bg-accent-soft text-accent",
+  violet: "border-violet/30 bg-violet-soft text-violet",
+} as const;
+
+function StatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: keyof typeof STAT_CARD_TONE;
+}) {
   return (
-    <div className="rounded-xl border border-black/10 p-4 text-center dark:border-white/10">
-      <p className="text-xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-black/60 dark:text-white/60">{label}</p>
+    <div className={`rounded-2xl border p-4 text-center shadow-sm ${STAT_CARD_TONE[tone]}`}>
+      <p className="text-xl font-extrabold">{value}</p>
+      <p className="mt-1 text-xs font-medium text-foreground/60">{label}</p>
     </div>
   );
 }

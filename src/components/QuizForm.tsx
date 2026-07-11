@@ -38,7 +38,7 @@ export default function QuizForm({
   return (
     <div className="space-y-4">
       {questions.map((q, i) => (
-        <div key={q.id} className="rounded-xl border border-black/10 p-4 dark:border-white/10">
+        <div key={q.id} className="rounded-2xl border border-card-border bg-card p-4 shadow-sm">
           <p className="mb-3 text-sm font-medium leading-relaxed">
             {i + 1}. {q.question_text}
           </p>
@@ -46,10 +46,10 @@ export default function QuizForm({
             <button
               type="button"
               onClick={() => setAnswers((a) => ({ ...a, [q.id]: true }))}
-              className={`flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
+              className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition ${
                 answers[q.id] === true
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-black/15 hover:border-black/30 dark:border-white/15 dark:hover:border-white/30"
+                  ? "border-info bg-info text-info-foreground"
+                  : "border-card-border hover:border-info"
               }`}
             >
               O
@@ -57,10 +57,10 @@ export default function QuizForm({
             <button
               type="button"
               onClick={() => setAnswers((a) => ({ ...a, [q.id]: false }))}
-              className={`flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
+              className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition ${
                 answers[q.id] === false
-                  ? "border-red-600 bg-red-600 text-white"
-                  : "border-black/15 hover:border-black/30 dark:border-white/15 dark:hover:border-white/30"
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : "border-card-border hover:border-accent"
               }`}
             >
               X
@@ -75,7 +75,7 @@ export default function QuizForm({
         type="button"
         onClick={handleSubmit}
         disabled={!allAnswered || isPending}
-        className="w-full rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 disabled:opacity-40"
+        className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm hover:opacity-90 disabled:opacity-40"
       >
         {isPending ? "채점 중..." : allAnswered ? "제출하고 채점하기" : `${Object.keys(answers).length}/${questions.length}개 답변함`}
       </button>

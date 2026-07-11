@@ -10,6 +10,7 @@ export type Article = {
   published_date: string;
   category: ArticleCategory;
   title: string;
+  headline: string | null;
   source: string;
   source_url: string;
   keywords: string[];
@@ -64,6 +65,15 @@ export type ArticleRead = {
 export type Profile = {
   id: string;
   nickname: string | null;
+  interest: string | null;
+  created_at: string;
+};
+
+export type UserInsight = {
+  user_id: string;
+  date: string;
+  interest: string;
+  insight_text: string;
   created_at: string;
 };
 
@@ -106,6 +116,11 @@ export interface Database {
         Row: ArticleRead;
         Insert: Omit<ArticleRead, "read_at"> & { read_at?: string };
         Update: Partial<ArticleRead>;
+      } & NoRelationships;
+      user_insights: {
+        Row: UserInsight;
+        Insert: Omit<UserInsight, "created_at"> & { created_at?: string };
+        Update: Partial<UserInsight>;
       } & NoRelationships;
     };
     Views: Record<string, never>;

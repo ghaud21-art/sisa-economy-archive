@@ -4,10 +4,10 @@ import type { MonthInfo } from "@/lib/dates";
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 function levelClass(rate: number | null): string {
-  if (rate === null) return "bg-black/5 dark:bg-white/5";
-  if (rate >= 80) return "bg-green-500/70 text-white";
-  if (rate >= 50) return "bg-yellow-500/60";
-  return "bg-red-500/60 text-white";
+  if (rate === null) return "bg-card border border-card-border text-foreground/40";
+  if (rate >= 80) return "bg-emerald-500 text-white";
+  if (rate >= 50) return "bg-amber text-amber-foreground";
+  return "bg-accent text-accent-foreground";
 }
 
 export default function QuizCalendar({
@@ -32,20 +32,20 @@ export default function QuizCalendar({
       <div className="mb-3 flex items-center justify-between">
         <Link
           href={`/mypage?month=${monthInfo.prevMonthKey}`}
-          className="rounded-full border border-black/10 px-3 py-1 text-sm hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
+          className="rounded-full border border-card-border px-3 py-1 text-sm hover:border-accent hover:text-accent"
         >
           ← 이전달
         </Link>
-        <h2 className="text-base font-semibold">{monthInfo.label}</h2>
+        <h2 className="text-base font-bold">{monthInfo.label}</h2>
         <Link
           href={`/mypage?month=${monthInfo.nextMonthKey}`}
-          className="rounded-full border border-black/10 px-3 py-1 text-sm hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
+          className="rounded-full border border-card-border px-3 py-1 text-sm hover:border-accent hover:text-accent"
         >
           다음달 →
         </Link>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 text-center text-xs text-black/50 dark:text-white/50">
+      <div className="grid grid-cols-7 gap-1.5 text-center text-xs text-foreground/50">
         {WEEKDAY_LABELS.map((w) => (
           <div key={w} className="pb-1">
             {w}

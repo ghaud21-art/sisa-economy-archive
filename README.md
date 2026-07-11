@@ -13,7 +13,7 @@
 ### 1. Supabase 프로젝트 생성
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 만듭니다 (무료 플랜, 카드 등록 불필요).
-2. 프로젝트의 **SQL Editor**에서 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) 내용을 실행해 테이블/RLS를 만듭니다.
+2. 프로젝트의 **SQL Editor**에서 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`0002_personalization.sql`](supabase/migrations/0002_personalization.sql)을 순서대로 실행해 테이블/RLS를 만듭니다.
 3. **Project Settings → API**에서 아래 3개 값을 확인합니다.
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -63,9 +63,11 @@ npm run generate-digest  # 배치 스크립트 수동 1회 실행 (뉴스 수집
 ## Vercel 배포
 
 1. [vercel.com](https://vercel.com)에서 이 GitHub 저장소를 Import합니다 (무료 Hobby 플랜).
-2. **Environment Variables**에 아래 2개만 등록합니다 (배치 관련 키는 Vercel에 넣지 않습니다 — GitHub Actions에서만 사용).
+2. **Environment Variables**에 아래를 등록합니다.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `GEMINI_API_KEY` (마이페이지의 관심분야 맞춤 인사이트를 웹앱이 직접 생성할 때 사용됩니다. 배치 전용이 아니라 웹앱에서도 필요합니다.)
+   - 네이버 키·`SUPABASE_SERVICE_ROLE_KEY`는 Vercel에 넣지 않습니다 (GitHub Actions 배치 전용).
 3. Deploy를 누르면 끝입니다.
 
 ## 프로젝트 구조

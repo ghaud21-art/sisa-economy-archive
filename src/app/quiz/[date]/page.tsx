@@ -26,10 +26,8 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
   if (!questions || questions.length === 0) {
     return (
       <div>
-        <h1 className="mb-4 text-2xl font-bold">{formatDateKo(date)} 퀴즈</h1>
-        <p className="text-sm text-black/60 dark:text-white/60">
-          아직 이 날짜의 퀴즈가 준비되지 않았어요.
-        </p>
+        <h1 className="mb-4 text-2xl font-extrabold">{formatDateKo(date)} 퀴즈</h1>
+        <p className="text-sm text-foreground/60">아직 이 날짜의 퀴즈가 준비되지 않았어요.</p>
       </div>
     );
   }
@@ -60,10 +58,10 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
   if (!attempt) {
     return (
       <div>
-        <h1 className="mb-2 text-2xl font-bold">{formatDateKo(date)} 퀴즈</h1>
-        <p className="mb-6 text-sm text-black/60 dark:text-white/60">
-          오늘 기사 {articleIds.length}건 중 {readCount}건을 읽었어요. 기사를 다 읽고 나서 퀴즈를
-          풀면 더 정확하게 이해도를 점검할 수 있어요.
+        <h1 className="mb-2 text-2xl font-extrabold">{formatDateKo(date)} 퀴즈</h1>
+        <p className="mb-6 rounded-2xl border border-card-border bg-accent-soft px-4 py-3 text-sm text-foreground/80">
+          오늘 기사 {articleIds.length}건 중 <span className="font-bold text-accent">{readCount}건</span>을
+          읽었어요. 기사를 다 읽고 나서 퀴즈를 풀면 더 정확하게 이해도를 점검할 수 있어요.
         </p>
         <QuizForm date={date} questions={questions.map((q) => ({ id: q.id, question_text: q.question_text }))} />
       </div>
@@ -79,12 +77,12 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold">{formatDateKo(date)} 퀴즈 결과</h1>
-      <div className="mb-8 rounded-xl border border-black/10 p-4 text-center dark:border-white/10">
-        <p className="text-3xl font-bold">
+      <h1 className="mb-2 text-2xl font-extrabold">{formatDateKo(date)} 퀴즈 결과</h1>
+      <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 text-center shadow-sm">
+        <p className="text-3xl font-extrabold text-accent">
           {attempt.score} / {attempt.total}
         </p>
-        <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+        <p className="mt-1 text-sm font-medium text-foreground/70">
           정답률 {attempt.correct_rate}%
         </p>
       </div>
@@ -96,34 +94,30 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
           return (
             <div
               key={q.id}
-              className={`rounded-xl border p-4 ${
-                isCorrect
-                  ? "border-black/10 dark:border-white/10"
-                  : "border-red-300 bg-red-500/5 dark:border-red-900"
+              className={`rounded-2xl border p-4 shadow-sm ${
+                isCorrect ? "border-card-border bg-card" : "border-accent/40 bg-accent-soft"
               }`}
             >
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-medium leading-relaxed">
                   {i + 1}. {q.question_text}
                 </p>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    isCorrect
-                      ? "bg-green-500/15 text-green-700 dark:text-green-400"
-                      : "bg-red-500/15 text-red-700 dark:text-red-400"
+                    isCorrect ? "bg-info-soft text-info" : "bg-accent text-accent-foreground"
                   }`}
                 >
                   {isCorrect ? "정답" : "오답"}
                 </span>
               </div>
-              <p className="mb-1 text-xs text-black/60 dark:text-white/60">
+              <p className="mb-1 text-xs text-foreground/60">
                 내 답: {answer?.user_answer ? "O" : "X"} · 정답: {q.correct_answer ? "O" : "X"}
               </p>
-              <p className="text-sm text-black/70 dark:text-white/70">{q.explanation}</p>
+              <p className="text-sm text-foreground/70">{q.explanation}</p>
               {q.related_article_id && (
                 <Link
                   href={`/article/${q.related_article_id}`}
-                  className="mt-2 inline-block text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  className="mt-2 inline-block text-xs font-medium text-accent hover:underline"
                 >
                   관련 기사 다시 보기 →
                 </Link>

@@ -20,10 +20,10 @@ export default function CategoryTabs({
         <Link
           key={tab.value}
           href={tab.value === "all" ? basePath : `${basePath}?category=${tab.value}`}
-          className={`rounded-full px-4 py-1.5 text-sm transition ${
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             active === tab.value
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-black/70 hover:border-black/30 dark:border-white/10 dark:text-white/70 dark:hover:border-white/30"
+              ? "bg-accent text-accent-foreground shadow-sm"
+              : "border border-card-border text-foreground/70 hover:border-accent hover:text-accent"
           }`}
         >
           {tab.label}
