@@ -34,6 +34,31 @@ export async function getYoutubeInsightById(id: string): Promise<YoutubeInsight 
   return data;
 }
 
+export async function hasNewYoutubeInsight(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const [{ data: profile }, { data: latest }] = await Promise.all([
+    supabase.from("profiles").select("last_seen_insights_at").eq("id", userId).maybeSingle(),
+    supabase
+      .from("youtube_insights")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (!latest) return false;
+  if (!profile?.last_seen_insights_at) return true;
+  return new Date(latest.created_at) > new Date(profile.last_seen_insights_at);
+}
+
+export async function markInsightsSeen(userId: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ last_seen_insights_at: new Date().toISOString() })
+    .eq("id", userId);
+}
+
 export async function getLatestPublishedDate(): Promise<string | null> {
   const supabase = await createClient();
   const { data } = await supabase

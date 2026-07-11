@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateYoutubeInsight } from "@/lib/gemini";
 
 async function requireAdmin() {
@@ -56,4 +57,29 @@ export async function deleteYoutubeInsightAction(id: string) {
 
   revalidatePath("/admin");
   revalidatePath("/insights");
+}
+
+export async function deleteArticleAction(articleId: string, publishedDate: string) {
+  await requireAdmin();
+  const admin = createAdminClient();
+
+  const { error } = await admin.from("articles").delete().eq("id", articleId);
+  if (error) throw new Error(error.message);
+
+  const { data: digest } = await admin
+    .from("daily_digest")
+    .select("article_ids")
+    .eq("date", publishedDate)
+    .maybeSingle();
+
+  if (digest) {
+    await admin
+      .from("daily_digest")
+      .update({ article_ids: digest.article_ids.filter((id) => id !== articleId) })
+      .eq("date", publishedDate);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath(`/archive/${publishedDate}`);
 }

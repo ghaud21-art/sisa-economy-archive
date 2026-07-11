@@ -27,7 +27,21 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          // 페인트 전에 저장된 테마를 적용해서 깜빡임(FOUC)을 방지
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              const t = localStorage.getItem("theme");
+              if (t === "light" || t === "dark") {
+                document.documentElement.setAttribute("data-theme", t);
+              }
+            } catch (e) {}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Header />
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>

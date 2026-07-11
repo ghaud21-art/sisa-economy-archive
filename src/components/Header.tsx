@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { hasNewYoutubeInsight } from "@/lib/data";
 import LogoutButton from "@/components/LogoutButton";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function Header() {
   const supabase = await createClient();
@@ -9,13 +11,14 @@ export default async function Header() {
   } = await supabase.auth.getUser();
 
   let isAdmin = false;
+  let hasNewInsight = false;
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .maybeSingle();
+    const [{ data: profile }, newInsight] = await Promise.all([
+      supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
+      hasNewYoutubeInsight(user.id),
+    ]);
     isAdmin = profile?.is_admin ?? false;
+    hasNewInsight = newInsight;
   }
 
   return (
@@ -31,8 +34,11 @@ export default async function Header() {
           <Link href="/archive" className="hover:text-accent">
             아카이브
           </Link>
-          <Link href="/insights" className="hover:text-accent">
+          <Link href="/insights" className="relative hover:text-accent">
             지식 인사이트
+            {hasNewInsight && (
+              <span className="absolute -right-2 -top-1 h-2 w-2 rounded-full bg-accent" />
+            )}
           </Link>
           {user ? (
             <>
@@ -65,6 +71,7 @@ export default async function Header() {
               </Link>
             </>
           )}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

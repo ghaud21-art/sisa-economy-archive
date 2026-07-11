@@ -69,6 +69,7 @@ export type Profile = {
   interest: string | null;
   share_rank: boolean;
   is_admin: boolean;
+  last_seen_insights_at: string | null;
   created_at: string;
 };
 

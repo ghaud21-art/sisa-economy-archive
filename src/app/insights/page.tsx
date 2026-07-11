@@ -1,10 +1,19 @@
 import Link from "next/link";
-import { listYoutubeInsights } from "@/lib/data";
+import { listYoutubeInsights, markInsightsSeen } from "@/lib/data";
+import { createClient } from "@/lib/supabase/server";
 import { formatDateKo } from "@/lib/dates";
 import { stripMarkdown } from "@/lib/text";
 
 export default async function InsightsPage() {
   const insights = await listYoutubeInsights();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    await markInsightsSeen(user.id);
+  }
 
   return (
     <div>

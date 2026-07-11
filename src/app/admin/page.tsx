@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateKo } from "@/lib/dates";
 import YoutubeInsightManager from "@/components/YoutubeInsightManager";
+import ArticleManager from "@/components/ArticleManager";
 
 // 유튜브 영상 분석(Gemini)이 길게 걸릴 수 있어 Vercel Hobby 한도까지 늘려둔다.
 export const maxDuration = 60;
@@ -57,18 +58,26 @@ export default async function AdminPage() {
   let latestArticlesCount = 0;
   let latestQuizCount = 0;
   let latestDigestExists = false;
+  let latestArticlesList: { id: string; headline: string | null; title: string; category: string }[] = [];
   if (latestDate) {
-    const [{ count: articlesCount }, { count: quizCount }, { data: digest }] = await Promise.all([
-      admin
-        .from("articles")
-        .select("id", { count: "exact", head: true })
-        .eq("published_date", latestDate),
-      admin.from("quiz_questions").select("id", { count: "exact", head: true }).eq("date", latestDate),
-      admin.from("daily_digest").select("date").eq("date", latestDate).maybeSingle(),
-    ]);
+    const [{ count: articlesCount }, { count: quizCount }, { data: digest }, { data: articleRows }] =
+      await Promise.all([
+        admin
+          .from("articles")
+          .select("id", { count: "exact", head: true })
+          .eq("published_date", latestDate),
+        admin.from("quiz_questions").select("id", { count: "exact", head: true }).eq("date", latestDate),
+        admin.from("daily_digest").select("date").eq("date", latestDate).maybeSingle(),
+        admin
+          .from("articles")
+          .select("id, headline, title, category")
+          .eq("published_date", latestDate)
+          .order("created_at", { ascending: false }),
+      ]);
     latestArticlesCount = articlesCount ?? 0;
     latestQuizCount = quizCount ?? 0;
     latestDigestExists = digest !== null;
+    latestArticlesList = articleRows ?? [];
   }
 
   return (
@@ -87,6 +96,17 @@ export default async function AdminPage() {
           value={`${latestQuizCount}문항${latestDigestExists ? "" : " (다이제스트 없음)"}`}
         />
       </div>
+
+      {latestDate && (
+        <>
+          <h2 className="mb-4 text-lg font-bold">
+            최신 발행 기사 관리 ({formatDateKo(latestDate)})
+          </h2>
+          <div className="mb-10">
+            <ArticleManager date={latestDate} items={latestArticlesList} />
+          </div>
+        </>
+      )}
 
       <h2 className="mb-4 text-lg font-bold">지식 인사이트 (유튜브)</h2>
       <div className="mb-10">

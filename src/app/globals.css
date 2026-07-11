@@ -45,6 +45,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* OS 설정을 따르는 기본값 (수동으로 선택하지 않았을 때) */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1e2224;
@@ -69,6 +70,55 @@
     --card: #262b2e;
     --card-border: #384044;
   }
+}
+
+/* 수동 토글로 명시적으로 선택했을 때 (OS 설정보다 우선) */
+:root[data-theme="dark"] {
+  --background: #1e2224;
+  --foreground: #eaf3fb;
+
+  --accent: #6fb0ea;
+  --accent-foreground: #12181c;
+  --accent-soft: #22384c;
+
+  --info: #8ca0b3;
+  --info-foreground: #12181c;
+  --info-soft: #2a343c;
+
+  --violet: #8fc4f2;
+  --violet-foreground: #12181c;
+  --violet-soft: #1e3550;
+
+  --amber: #e8c273;
+  --amber-foreground: #1e2224;
+  --amber-soft: #3a331f;
+
+  --card: #262b2e;
+  --card-border: #384044;
+}
+
+:root[data-theme="light"] {
+  --background: #f7fbff;
+  --foreground: #35393c;
+
+  --accent: #4a87c6;
+  --accent-foreground: #ffffff;
+  --accent-soft: #e3f1fc;
+
+  --info: #526270;
+  --info-foreground: #ffffff;
+  --info-soft: #e6eaed;
+
+  --violet: #2f6ca3;
+  --violet-foreground: #ffffff;
+  --violet-soft: #e3f1fc;
+
+  --amber: #d7a13f;
+  --amber-foreground: #35393c;
+  --amber-soft: #f6ecd8;
+
+  --card: #ffffff;
+  --card-border: #dfe8ef;
 }
 
 body {
