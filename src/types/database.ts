@@ -105,6 +105,21 @@ export type LeaderboardRow = {
   attempt_count: number;
 };
 
+export type YoutubeInsight = {
+  id: string;
+  youtube_url: string;
+  video_title: string;
+  headline: string;
+  keywords: string[];
+  summary: string;
+  key_arguments: string;
+  economic_meaning: string;
+  insight: string;
+  concepts: ArticleConcept[];
+  published_at: string;
+  created_at: string;
+};
+
 type NoRelationships = { Relationships: [] };
 
 export interface Database {
@@ -166,6 +181,15 @@ export interface Database {
           finished_at?: string | null;
         };
         Update: Partial<BatchRun>;
+      } & NoRelationships;
+      youtube_insights: {
+        Row: YoutubeInsight;
+        Insert: Omit<YoutubeInsight, "id" | "created_at" | "published_at"> & {
+          id?: string;
+          created_at?: string;
+          published_at?: string;
+        };
+        Update: Partial<YoutubeInsight>;
       } & NoRelationships;
     };
     Views: Record<string, never>;

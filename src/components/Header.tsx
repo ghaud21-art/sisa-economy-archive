@@ -31,6 +31,9 @@ export default async function Header() {
           <Link href="/archive" className="hover:text-accent">
             아카이브
           </Link>
+          <Link href="/insights" className="hover:text-accent">
+            지식 인사이트
+          </Link>
           {user ? (
             <>
               <Link href="/trends" className="hover:text-accent">

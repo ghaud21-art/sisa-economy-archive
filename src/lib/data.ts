@@ -2,7 +2,37 @@ import { createClient } from "@/lib/supabase/server";
 import { generatePersonalInsight } from "@/lib/gemini";
 import { stripMarkdown } from "@/lib/text";
 import { addDaysUtc, todayKst } from "@/lib/dates";
-import type { Article, ArticleCategory } from "@/types/database";
+import type { Article, ArticleCategory, YoutubeInsight } from "@/types/database";
+
+export async function listYoutubeInsights(limit = 30): Promise<YoutubeInsight[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("youtube_insights")
+    .select("*")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("listYoutubeInsights error:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function getYoutubeInsightById(id: string): Promise<YoutubeInsight | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("youtube_insights")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getYoutubeInsightById error:", error.message);
+    return null;
+  }
+  return data;
+}
 
 export async function getLatestPublishedDate(): Promise<string | null> {
   const supabase = await createClient();

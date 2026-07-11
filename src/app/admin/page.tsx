@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateKo } from "@/lib/dates";
+import YoutubeInsightManager from "@/components/YoutubeInsightManager";
+
+// 유튜브 영상 분석(Gemini)이 길게 걸릴 수 있어 Vercel Hobby 한도까지 늘려둔다.
+export const maxDuration = 60;
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   success: { label: "성공", className: "bg-info-soft text-info" },
@@ -32,16 +36,21 @@ export default async function AdminPage() {
 
   const admin = createAdminClient();
 
-  const [{ data: runs }, { count: userCount }, { data: latestArticle }] = await Promise.all([
-    admin.from("batch_runs").select("*").order("started_at", { ascending: false }).limit(20),
-    admin.from("profiles").select("id", { count: "exact", head: true }),
-    admin
-      .from("articles")
-      .select("published_date")
-      .order("published_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const [{ data: runs }, { count: userCount }, { data: latestArticle }, { data: youtubeInsights }] =
+    await Promise.all([
+      admin.from("batch_runs").select("*").order("started_at", { ascending: false }).limit(20),
+      admin.from("profiles").select("id", { count: "exact", head: true }),
+      admin
+        .from("articles")
+        .select("published_date")
+        .order("published_date", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      admin
+        .from("youtube_insights")
+        .select("id, video_title, headline, published_at")
+        .order("published_at", { ascending: false }),
+    ]);
 
   const latestDate = latestArticle?.published_date ?? null;
 
@@ -77,6 +86,11 @@ export default async function AdminPage() {
           label="최신 발행 퀴즈"
           value={`${latestQuizCount}문항${latestDigestExists ? "" : " (다이제스트 없음)"}`}
         />
+      </div>
+
+      <h2 className="mb-4 text-lg font-bold">지식 인사이트 (유튜브)</h2>
+      <div className="mb-10">
+        <YoutubeInsightManager items={youtubeInsights ?? []} />
       </div>
 
       <h2 className="mb-4 text-lg font-bold">배치 실행 이력</h2>
