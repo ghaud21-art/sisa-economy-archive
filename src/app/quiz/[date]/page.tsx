@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateKo } from "@/lib/dates";
+import { stripMarkdown } from "@/lib/text";
 import QuizForm from "@/components/QuizForm";
 import type { QuizAnswer } from "@/types/database";
 
@@ -63,7 +64,10 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
           오늘 기사 {articleIds.length}건 중 <span className="font-bold text-accent">{readCount}건</span>을
           읽었어요. 기사를 다 읽고 나서 퀴즈를 풀면 더 정확하게 이해도를 점검할 수 있어요.
         </p>
-        <QuizForm date={date} questions={questions.map((q) => ({ id: q.id, question_text: q.question_text }))} />
+        <QuizForm
+          date={date}
+          questions={questions.map((q) => ({ id: q.id, question_text: stripMarkdown(q.question_text) }))}
+        />
       </div>
     );
   }
@@ -100,7 +104,7 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
             >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-medium leading-relaxed">
-                  {i + 1}. {q.question_text}
+                  {i + 1}. {stripMarkdown(q.question_text)}
                 </p>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -113,7 +117,7 @@ export default async function QuizPage({ params }: { params: Promise<{ date: str
               <p className="mb-1 text-xs text-foreground/60">
                 내 답: {answer?.user_answer ? "O" : "X"} · 정답: {q.correct_answer ? "O" : "X"}
               </p>
-              <p className="text-sm text-foreground/70">{q.explanation}</p>
+              <p className="text-sm text-foreground/70">{stripMarkdown(q.explanation)}</p>
               {q.related_article_id && (
                 <Link
                   href={`/article/${q.related_article_id}`}

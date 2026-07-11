@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getArticleById } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateKo } from "@/lib/dates";
+import { stripMarkdown } from "@/lib/text";
 
 const CATEGORY_STYLE = {
   economy_affairs: { label: "시사·경제", className: "bg-info-soft text-info" },
@@ -58,13 +59,13 @@ export default async function ArticleDetailPage({
       </div>
 
       <Section title="종합 요약" accent="accent">
-        {article.summary}
+        {stripMarkdown(article.summary)}
       </Section>
       <Section title="현실 적용 인사이트" accent="info">
-        {article.insight}
+        {stripMarkdown(article.insight)}
       </Section>
       <Section title="미래 예측" accent="violet">
-        {article.prediction}
+        {stripMarkdown(article.prediction)}
       </Section>
 
       {article.concepts.length > 0 && (
@@ -75,8 +76,8 @@ export default async function ArticleDetailPage({
           <dl className="space-y-3">
             {article.concepts.map((c) => (
               <div key={c.term} className="rounded-2xl border border-card-border bg-amber-soft p-3">
-                <dt className="mb-1 text-sm font-semibold">{c.term}</dt>
-                <dd className="text-sm text-foreground/70">{c.explanation}</dd>
+                <dt className="mb-1 text-sm font-semibold">{stripMarkdown(c.term)}</dt>
+                <dd className="text-sm text-foreground/70">{stripMarkdown(c.explanation)}</dd>
               </div>
             ))}
           </dl>

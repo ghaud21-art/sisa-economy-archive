@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreatePersonalInsight } from "@/lib/data";
 import { computeStreak, formatDateKo, getMonthInfo, todayKst } from "@/lib/dates";
+import { stripMarkdown } from "@/lib/text";
 import QuizCalendar from "@/components/QuizCalendar";
+import InterestEditor from "@/components/InterestEditor";
 
 export default async function MyPage({
   searchParams,
@@ -113,20 +115,32 @@ export default async function MyPage({
         <StatCard label={`${monthInfo.month}월 응시 횟수`} value={`${monthAttempts.length}회`} tone="violet" />
       </div>
 
-      {profile?.interest && (
-        <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 shadow-sm">
-          <h2 className="mb-2 text-sm font-semibold text-accent">
-            &ldquo;{profile.interest}&rdquo; 관점의 오늘 인사이트
-          </h2>
-          {personalInsight ? (
-            <p className="text-sm leading-relaxed">{personalInsight}</p>
-          ) : (
-            <p className="text-sm text-foreground/60">
-              아직 발행된 오늘의 뉴스가 없어서 맞춤 인사이트를 준비하지 못했어요.
+      <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 shadow-sm">
+        {profile?.interest ? (
+          <>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-accent">
+                &ldquo;{profile.interest}&rdquo; 관점의 오늘 인사이트
+              </h2>
+              <InterestEditor userId={user.id} interest={profile.interest} />
+            </div>
+            {personalInsight ? (
+              <p className="text-sm leading-relaxed">{personalInsight}</p>
+            ) : (
+              <p className="text-sm text-foreground/60">
+                아직 발행된 오늘의 뉴스가 없어서 맞춤 인사이트를 준비하지 못했어요.
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-foreground/70">
+              관심분야를 등록하면 그 관점에서 오늘 뉴스를 다시 짚어드려요.
             </p>
-          )}
-        </div>
-      )}
+            <InterestEditor userId={user.id} interest={null} />
+          </div>
+        )}
+      </div>
 
       <div className="mb-10 rounded-2xl border border-card-border bg-card p-4 shadow-sm">
         <QuizCalendar monthInfo={monthInfo} ratesByDate={ratesByDate} />
@@ -140,8 +154,10 @@ export default async function MyPage({
           {wrongItems.map((item, i) => (
             <div key={i} className="rounded-2xl border border-card-border bg-card p-4 shadow-sm">
               <p className="mb-1 text-xs text-foreground/50">{formatDateKo(item.date)}</p>
-              <p className="mb-2 text-sm font-medium leading-relaxed">{item.question_text}</p>
-              <p className="text-sm text-foreground/70">{item.explanation}</p>
+              <p className="mb-2 text-sm font-medium leading-relaxed">
+                {stripMarkdown(item.question_text)}
+              </p>
+              <p className="text-sm text-foreground/70">{stripMarkdown(item.explanation)}</p>
               {item.related_article_id && (
                 <Link
                   href={`/article/${item.related_article_id}`}

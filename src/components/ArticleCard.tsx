@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { stripMarkdown } from "@/lib/text";
 import type { Article } from "@/types/database";
 
 const CATEGORY_STYLE: Record<Article["category"], { label: string; className: string }> = {
@@ -22,7 +23,9 @@ export default function ArticleCard({ article }: { article: Article }) {
       <h3 className="mb-2 text-base font-semibold leading-snug">
         {article.headline ?? article.title}
       </h3>
-      <p className="mb-3 line-clamp-2 text-sm text-foreground/70">{article.summary}</p>
+      <p className="mb-3 line-clamp-2 text-sm text-foreground/70">
+        {stripMarkdown(article.summary)}
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {article.keywords.slice(0, 5).map((kw) => (
           <span

@@ -66,7 +66,8 @@ export async function analyzeArticle(article: CandidateArticle): Promise<Article
 - prediction: 이 뉴스로 인해 향후 일어날 수 있는 일에 대한 현실적인 예측
 - concepts: 이 기사를 제대로 이해하는 데 필요한 배경 개념/용어 2~4개와 짧은 설명
 
-중요: 인물 이름, 직함, 소속, 수치 등 사실 정보는 반드시 위에 주어진 제목/스니펫에 있는 내용만 사용해. 스니펫에 없는 정보는 너의 사전 지식으로 추측하거나 채워넣지 마.`,
+중요: 인물 이름, 직함, 소속, 수치 등 사실 정보는 반드시 위에 주어진 제목/스니펫에 있는 내용만 사용해. 스니펫에 없는 정보는 너의 사전 지식으로 추측하거나 채워넣지 마.
+모든 텍스트는 **, #, - 같은 마크다운 기호 없이 순수 텍스트로만 작성해.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: ANALYSIS_SCHEMA,
@@ -144,7 +145,7 @@ export async function generateDailyOverview(
 
   const response = await getClient().models.generateContent({
     model: MODEL,
-    contents: `오늘 수집된 시사/경제/AI 뉴스 목록이다:\n\n${digestInput}\n\n위 뉴스들을 관통하는 오늘의 흐름을 한국어로 4~6문장의 종합 다이제스트로 작성해줘. 개별 기사 나열이 아니라 오늘 하루의 시사/경제/AI 이슈를 하나의 흐름으로 엮어서 설명해줘.`,
+    contents: `오늘 수집된 시사/경제/AI 뉴스 목록이다:\n\n${digestInput}\n\n위 뉴스들을 관통하는 오늘의 흐름을 한국어로 4~6문장의 종합 다이제스트로 작성해줘. 개별 기사 나열이 아니라 오늘 하루의 시사/경제/AI 이슈를 하나의 흐름으로 엮어서 설명해줘. **, #, - 같은 마크다운 기호 없이 순수 텍스트로만 작성해.`,
   });
 
   return response.text?.trim() ?? "";
@@ -192,7 +193,8 @@ export async function generateQuiz(
 - 너무 쉬운 문제만 내지 말고, 헷갈릴 수 있는 디테일(숫자, 주체, 시점 등)을 활용한 문제도 섞어줘.
 - O(참)와 X(거짓) 문제 비율을 비슷하게 맞춰줘. X 문제를 만들 때는 위 요약에 있는 인물/기관/숫자 중 하나를 의도적으로 다른 값으로 바꿔서 틀린 문장을 만들어.
 - 인물 이름, 직함, 기관명, 숫자 등은 반드시 위 요약에 적힌 대로만 사용해. 요약에 없는 이름이나 사실을 너의 사전 지식으로 채워넣지 마. 대통령·기관장 등 직함이 붙은 인물은 요약에 언급된 이름을 그대로 써야 하고, 임의로 다른 인물 이름으로 바꾸면 안 돼(단, 의도적으로 틀린 X 문제를 만드는 경우는 예외).
-- explanation에는 왜 그것이 정답인지 기사 내용을 근거로 간단히 설명해줘.`,
+- explanation에는 왜 그것이 정답인지 기사 내용을 근거로 간단히 설명해줘.
+- question_text와 explanation은 **, #, - 같은 마크다운 기호 없이 순수 텍스트로만 작성해.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: QUIZ_SCHEMA,

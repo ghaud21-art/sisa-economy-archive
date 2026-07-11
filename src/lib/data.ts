@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { generatePersonalInsight } from "@/lib/gemini";
+import { stripMarkdown } from "@/lib/text";
 import type { Article, ArticleCategory } from "@/types/database";
 
 export async function getLatestPublishedDate(): Promise<string | null> {
@@ -89,27 +90,29 @@ export async function getOrCreatePersonalInsight(
   const supabase = await createClient();
   const { data: cached } = await supabase
     .from("user_insights")
-    .select("insight_text")
+    .select("interest, insight_text")
     .eq("user_id", userId)
     .eq("date", date)
     .maybeSingle();
-  if (cached) return cached.insight_text;
+  // 캐시된 인사이트가 지금 관심분야와 같을 때만 재사용 (관심분야를 바꾸면 새로 생성)
+  if (cached && cached.interest === interest) return stripMarkdown(cached.insight_text);
 
   const digest = await getDailyDigest(date);
   if (!digest) return null;
   const articles = await getArticlesByDate(date);
   if (articles.length === 0) return null;
 
-  const insightText = await generatePersonalInsight(
+  const rawInsight = await generatePersonalInsight(
     interest,
     digest.overview_text,
     articles.map((a) => ({ title: a.headline ?? a.title, summary: a.summary }))
   );
-  if (!insightText) return null;
+  if (!rawInsight) return null;
+  const insightText = stripMarkdown(rawInsight);
 
   await supabase
     .from("user_insights")
-    .insert({ user_id: userId, date, interest, insight_text: insightText });
+    .upsert({ user_id: userId, date, interest, insight_text: insightText }, { onConflict: "user_id,date" });
 
   return insightText;
 }

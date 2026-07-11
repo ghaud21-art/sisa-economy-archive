@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listArchiveDates } from "@/lib/data";
 import { formatDateKo } from "@/lib/dates";
+import { stripMarkdown } from "@/lib/text";
 
 export default async function ArchivePage() {
   const days = await listArchiveDates();
@@ -25,7 +26,9 @@ export default async function ArchivePage() {
                     기사 {day.article_count}건
                   </span>
                 </div>
-                <p className="line-clamp-2 text-sm text-foreground/70">{day.overview_text}</p>
+                <p className="line-clamp-2 text-sm text-foreground/70">
+                  {stripMarkdown(day.overview_text)}
+                </p>
               </Link>
             </li>
           ))}

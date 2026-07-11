@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticlesByDate, getDailyDigest } from "@/lib/data";
 import { formatDateKo } from "@/lib/dates";
+import { stripMarkdown } from "@/lib/text";
 import CategoryTabs from "@/components/CategoryTabs";
 import ArticleCard from "@/components/ArticleCard";
 import type { ArticleCategory } from "@/types/database";
@@ -38,7 +39,7 @@ export default async function ArchiveDayPage({
 
       <div className="mb-8 rounded-2xl border border-card-border bg-accent-soft p-5 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-accent">이 날의 종합 다이제스트</h2>
-        <p className="text-sm leading-relaxed">{digest.overview_text}</p>
+        <p className="text-sm leading-relaxed">{stripMarkdown(digest.overview_text)}</p>
         <Link
           href={`/quiz/${date}`}
           className="mt-4 inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground shadow-sm hover:opacity-90"
