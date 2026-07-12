@@ -48,7 +48,7 @@ npm run generate-digest  # 배치 스크립트 수동 1회 실행 (뉴스 수집
 
 ## GitHub Actions 자동 실행 설정
 
-저장소를 GitHub에 올린 뒤 **Settings → Secrets and variables → Actions**에서 아래 시크릿을 등록하세요. `.github/workflows/daily-digest.yml`이 매일 07:00(KST)에 `npm run generate-digest`를 자동 실행합니다.
+저장소를 GitHub에 올린 뒤 **Settings → Secrets and variables → Actions**에서 아래 시크릿을 등록하세요. `.github/workflows/daily-digest.yml`이 매일 06:00(KST)에 `npm run generate-digest`를 자동 실행합니다.
 
 | 이름 | 값 |
 | --- | --- |

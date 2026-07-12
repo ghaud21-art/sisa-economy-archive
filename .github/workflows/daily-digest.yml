@@ -2,8 +2,8 @@ name: Daily News Digest
 
 on:
   schedule:
-    # 매일 22:00 UTC = 07:00 KST
-    - cron: "0 22 * * *"
+    # 매일 21:00 UTC = 06:00 KST
+    - cron: "0 21 * * *"
   workflow_dispatch: {}
 
 jobs:
