@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "뉴스 아카이브",
   description: "매일 아침 시사·경제·AI 뉴스를 요약하고 O/X 퀴즈로 이해도를 점검하세요.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "뉴스 아카이브",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4a87c6",
 };
 
 export default function RootLayout({
@@ -43,6 +53,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <ServiceWorkerRegister />
         <Header />
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
       </body>

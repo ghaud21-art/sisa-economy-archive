@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# 원본 아이콘 디자인 소스 (실제 사용되는 파일은 src/app/icon.png, public/icons/에 생성됨)
+/*.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
